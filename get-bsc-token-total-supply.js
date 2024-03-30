@@ -1,24 +1,22 @@
 import axios from 'axios';
 
-export default async function handler() {
+export default async function handler(req, res) {
   try {
-    const apiKey = process.env.REACT_APP_BSCSCAN_API_KEY; // Use your environment variable name
-    const tokenAddress = '0x1A05EbD6FA3a9fF19e40988F84dbb300abB2b11D'; // Your token contract address
+    const apiKey = process.env.REACT_APP_BSCSCAN_API_KEY; // Replace with your environment variable name
+    const tokenAddress = req.query.tokenAddress; // Get token address from query parameter
 
     if (!apiKey || !tokenAddress) {
-      throw new Error('Missing required environment variables');
+      throw new Error('Missing required parameters');
     }
 
-    const response = await axios.get(`https://api.bscscan.com/v1/gastokeninfo?address=${tokenAddress}&apikey=${apiKey}`);
-    const totalSupply = response.data.result.totalsupply; // Assuming the total supply is in the "result" object
+    const response = await axios.get(`https://api.bscscan.com/api?module=stats&action=tokensupply&contractaddress=${tokenAddress}&apikey=${apiKey}`);
+    const totalSupply = response.data.result.totalSupply; // Assuming the total supply is in the "result" object
 
-    return (
-      <div>
-        <h1>Total Supply: {totalSupply}</h1>
-      </div>
-    );
+    // Set plain text response with total supply
+    res.setHeader('Content-Type', 'text/plain'); // Set content type
+    res.status(200).send(totalSupply);
   } catch (error) {
     console.error(error);
-    return <div>Error fetching total supply</div>;
+    res.status(500).send('Error: Failed to fetch total supply'); // Plain text error message
   }
 }
